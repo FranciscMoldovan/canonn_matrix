@@ -1,249 +1,345 @@
-#include "pvm3.h"
+#include <pvm3.h>
 #include <stdio.h>
-#define N 4
+#include <math.h>
+//#include <QApplication>
+//#include <QTextEdit>
+#include <qapplication.h>
+#include <qpushbutton.h>
 
-int  main()
+int main(int argc, char **argv)
 {
-   int *task_ids;
-   int my_tid,i,j;
-   int nr_proc = 0;
-   
-  
-
-   //matrix size
-   int n=0;
-   //block size
-   int blockS = 0;
-   //number of blocks
-   int nrBlocks =0;
-
-   //matrices to be multiplied
-	int** A;
-	int** B;
-   //result matrix
-	int** result;
-
-   //read and initialize data
-	FILE * f;
-	f = fopen("testfile2.txt","r");
-	//read matrix dimension
-	fscanf(f,"%d",&n);
-	printf("\nMatrix dimension is %d\n",n);
-	//read block size
-	fscanf(f,"%d",&blockS);
-	printf("\nBlock size is %d \n", blockS);
-
-	A = new int*[n];
-	B = new int*[n];
-    result = new int* [n];
 
 
-	for (i=0; i<n; i++){
-		result[i] = new int[n];
-		A[i] = new int[n];
-		B[i] = new int[n];
-	}
 
-	//initialize result
-	for (i=0; i<n; i++)
-		for (j=0; j<n; j++)
-			result[i][j] = 0;
+  int *tids;
+  int my_tid, i, j;
+  int nproc = 0;
 
-	
-	//read matrix A
-	for(i=0; i<n; i++)
-		for(j=0;j<n;j++)
-			fscanf(f,"%d",&A[i][j]);
+  // matrix size
+  int size_mat = 0;
 
-	//read matrix B
-	for(i=0; i<n; i++)
-		for(j=0;j<n;j++)
-			fscanf(f,"%d",&B[i][j]);
+  // block size
+  int size_block = 0;
 
-	
-		for(i=0; i<n; i++){
-			for(j=0;j<n;j++)
-				printf("%d ",A[i][j]);
-			printf("\n");
-		}
-		printf("\n");
-		for(i=0; i<n; i++){
-			for(j=0;j<n;j++)
-				 printf("%d ",B[i][j]);
-			printf("\n");
-		}
+  // number of blocks on each dimension
+  int nb_blocks = 0;
 
-	fclose(f);
+  // matrices to be multiplied
+  int **mat1;
+  int **mat2;
 
-	my_tid = pvm_mytid();
+  // result matrix
+  int **result;
 
-	nrBlocks = n/blockS;
-	printf("\nNr of blocks is %d \n",nrBlocks);
-	nr_proc = nrBlocks*nrBlocks;
-	printf("\nNr of processes is %d \n",nr_proc);
-	task_ids = new int[nr_proc];
+  // reading and initializing data
+  FILE *f = fopen(argv[1], "r");
 
-    pvm_spawn("lab6_slave", (char **)0, PvmTaskDefault, "", nr_proc, task_ids);
+  // reading matrix dimensions
+  fscanf(f, "%d", &size_mat);
+  printf("Matrix Dimension:%d\n", size_mat);
 
-	int k=0;
-	//matrix of mesh
-	int** a = new int* [nrBlocks];
-	for (i = 0; i < nrBlocks; i++)
-		a[i] = new int[nrBlocks];
+  // reading block size
+  fscanf(f, "%d", &size_block);
+  printf("Block Dimension:%d\n", size_block);
 
+  mat1 = new int*[size_mat];
+  mat2 = new int*[size_mat];
+  result = new int*[size_mat];
 
-	for(i=0;i<nrBlocks;i++)
-		for(j=0;j<nrBlocks;j++)
-			a[i][j] = task_ids[k++];
+  // by adding (), all values are initialized to zero
+  for(i = 0; i < size_mat; i++)
+  {
+    result[i] = new int[size_mat]();
+    mat1[i] = new int[size_mat];
+    mat2[i] = new int[size_mat];
+  }
 
-//      print mesh
-		for(i=0;i<nrBlocks;i++){
-				for(j=0;j<nrBlocks;j++)
-					printf("%d ",a[i][j]);
-			printf("\n");
-		}
+  // reading first matrix from text file
+  for(i = 0; i < size_mat; i++)
+    for(j = 0; j < size_mat; j++)
+    {
+      fscanf(f, "%d", &mat1[i][j]);
+    }
 
-	// send neighbors to all processes
-	int v_dreapta;
-	int v_stanga;
-	int v_sus;
-	int v_jos;
+  printf("First Matrix Contents:\n");
+  for(i = 0; i < size_mat; i++)
+  {
+    for(j = 0; j < size_mat; j++)
+    {
+      printf("%d ", mat1[i][j]);
+    }
+    printf("\n");
+  }
+
+  // reading second matrix from text file
+  for(i = 0; i < size_mat; i++)
+    for(j = 0; j < size_mat; j++)
+    {
+      fscanf(f, "%d", &mat2[i][j]);
+    }
 
 
-	for(i=0;i<nrBlocks;i++)
-		for(j=0;j<nrBlocks;j++){
-		
-			 pvm_initsend(PvmDataDefault);
+  printf("Second Matrix Contents:\n");
+  for(i = 0; i < size_mat; i++)
+  {
+    for(j = 0; j < size_mat; j++)
+    {
+      printf("%d ", mat2[i][j]);
+    }
+    printf("\n");
+  }
 
-			 // vecin stanga 
-			 if(j > 0 )  v_stanga = a[i][j-1];
-			 else		 v_stanga = a[i][nrBlocks-1];
-  			 pvm_pkint(&v_stanga, 1, 1);
+  fclose(f);
 
+  // enroll in pvm
+  my_tid = pvm_mytid();
 
-			// vecin dreapta
-			 if(j < nrBlocks-1 )  v_dreapta = a[i][j+1];
-			 else		   v_dreapta = a[i][0];
-  			 pvm_pkint(&v_dreapta, 1, 1);
+  nb_blocks = size_mat / size_block;
+  printf("Total Numer of Blocks:%d\n", nb_blocks * nb_blocks);
+  nproc = pow(nb_blocks, 2);
+  printf("Number of Workers:%d\n", nproc);
 
-			 // vecin sus
-			 if(i > 0 )  v_sus = a[i-1][j];
-			 else		 v_sus = a[nrBlocks-1][j];
-  			 pvm_pkint(&v_sus, 1, 1);
+  tids = new int[nproc];
 
-			  // vecin jos 
-			 if(i < nrBlocks-1)  v_jos = a[i+1][j];
-			 else		  v_jos = a[0][j];
-  			 pvm_pkint(&v_jos, 1, 1);
+  pvm_spawn("mat_slave", (char **)0, PvmTaskDefault, "", nproc, tids);
 
-			 pvm_send(a[i][j], 0);
-		}
+  int k = 0;
 
+  // matrix of mesh
+  int **a = new int*[nb_blocks];
+  for(i = 0; i < nb_blocks; i++)
+  {
+    a[i] = new int[nb_blocks];
+  }
 
-				
+  for(i = 0; i < nb_blocks; i++)
+    for(j = 0; j < nb_blocks; j++)
+    {
+      a[i][j] = tids[k++];
+    }
 
-
-	int q,t,counti,countj;
- 
-
-	//alloc space for blocks (blockS*blockS)
-	int** blockFromA = new int* [blockS];
-	int** blockFromB = new int* [blockS];
-
-	for (i=0; i<blockS; i++){
-		blockFromA[i] = new int[blockS];
-		blockFromB[i] = new int[blockS];
-	}
-
-  
-	int z,v;
-	//sending the blocks to processes	
-	for (i=0; i<nrBlocks; i++)
-		for (j=0; j<nrBlocks; j++){
-
-			//build small block
-			counti = 0; countj = 0;
-			for(q=i*blockS; q<(i+1)*blockS; q++){
-				for (t=j*blockS; t<(j+1)*blockS; t++){
-					blockFromA[counti][countj] = A[q][t];
-					blockFromB[counti][countj] = B[q][t];
-					countj++;
-				}
-				counti++;
-				countj = 0;
-			}
+  // printing the mesh of processes:
+  for(i = 0; i < nb_blocks; i++)
+  {
+    for(j = 0; j < nb_blocks; j++)
+    {
+      printf("%d ", a[i][j]);
+    }
+    printf("\n");
+  }
 
 
-		printf("\n");
-			//send block
-			pvm_initsend(PvmDataDefault);	
-			pvm_pkint(&nrBlocks,1,1);
-			pvm_pkint(&blockS,1,1);
 
-			for(t=0; t<blockS; t++)
-				pvm_pkint(blockFromA[t],blockS,1);
-			printf("sending block to :%d \n", a[i][(j+i)%nrBlocks]);
-			pvm_send(a[i][(j+i)%nrBlocks],0);
-
-
-			pvm_initsend(PvmDataDefault);	
-			for(t=0; t<blockS; t++)
-				pvm_pkint(blockFromB[t],blockS,1);
-			printf("sending block to :%d \n", a[(j+i)%nrBlocks][j]);
-			pvm_send(a[(j+i)%nrBlocks][j],2);
-
-
-		}
+  // neighbours:
+  int n_right;
+  int n_left;
+  int n_up;
+  int n_down;
 
 
 
 
+  for(i = 0; i < nb_blocks; i++)
+    for(j = 0; j < nb_blocks; j++)
+    {
+      pvm_initsend(PvmDataDefault);
+      // left neighbour
+      if(j > 0)
+      {
+        n_left = a[i][j - 1];
+      }
+      else
+      {
+        n_left = a[i][nb_blocks - 1];
+      }
+      pvm_pkint(&n_left, 1, 1);
+
+      // right neighbour
+      if(j < nb_blocks - 1)
+      {
+        n_right = a[i][j + 1];
+      }
+      else
+      {
+        n_right = a[i][0];
+      }
+      pvm_pkint(&n_right, 1, 1);
+
+      // up neighbour
+      if(i > 0)
+      {
+        n_up = a[i - 1][j];
+      }
+      else
+      {
+        n_up = a[nb_blocks - 1][j];
+      }
+      pvm_pkint(&n_up, 1, 1);
+
+      // neighbour down
+      if(i < nb_blocks - 1)
+      {
+        n_down = a[i + 1][j];
+      }
+      else
+      {
+        n_down = a[0][j];
+      }
+      pvm_pkint(&n_down, 1, 1);
+
+      pvm_send(a[i][j], 0);
+    }
+
+  printf("( 1 ) \n");
 
 
-	//compute the matrix multiplication sequentially
-		for (i=0; i<n; i++)
-			for (j=0; j<n; j++)
-				for(z=0; z<n; z++)
-					result[i][j]+=(A[i][z]*B[z][j]);
-		
-		printf("\nComputed result: \n");
-		for (i=0; i<n; i++){
-			for (j=0; j<n; j++)
-				printf("%d ",result[i][j]);
-			printf("\n");
-		}
+  int q, t, count_i, count_j;
+
+  // allocating space for blocks
+  int **block_mat1 = new int*[size_block];
+  int **block_mat2 = new int*[size_block];
+
+  for(i = 0; i < size_block; i++)
+  {
+    block_mat1[i] = new int[size_block];
+    block_mat2[i] = new int[size_block];
+  }
+
+  printf("( 2 )\n");
+
+  int z, v;
+
+  // sending the blocks to the processes
+  for(i = 0; i < nb_blocks; i++)
+    for(j = 0; j < nb_blocks; j++)
+    {
+      // building a block
+      count_i = 0;
+      count_j = 0;
+
+      for(q = i * size_block; q < (i + 1)*size_block; q++)
+      {
+        for(t = j * size_block; t < (j + 1)*size_block; t++)
+        {
+          block_mat1[count_i][count_j] = mat1[q][t];
+          block_mat2[count_i][count_j] = mat2[q][t];
+          count_j++;
+        }
+        count_i++;
+        count_j = 0;
+      }
 
 
 
-	for (i=0; i<n; i++)
-		for (j=0; j<n; j++)
-			result[i][j] = 0;
-
-	//receive results from processes and display it
-		
-	int** resultBlock = new int* [blockS];
-	for (i=0; i<blockS; i++){
-		resultBlock[i] = new int[blockS];
-	}
-
-	for (i=0; i<nrBlocks; i++)
-		for (j=0; j<nrBlocks; j++){
-			pvm_recv(a[i][j], -1);
-			for(t=0; t<blockS; t++)
-				pvm_upkint(resultBlock[t],blockS,1);
-
-			for(q=0; q<blockS;q++)
-				for(v=0;v<blockS;v++)
-					result[(i*blockS)+q][(j*blockS)+v] = resultBlock[q][v];
-		}
-	
-	printf("\nFinal received result:\n");
-	for (i=0; i<n; i++){
-		for (j=0; j<n; j++)
-			printf("%d ",result[i][j]);
-		printf("\n");
-	}
+      printf("\n");
 
 
-   pvm_exit();
+
+
+
+      // send block
+      pvm_initsend(PvmDataDefault);
+      pvm_pkint(&nb_blocks, 1, 1);
+      pvm_pkint(&size_block, 1, 1);
+
+      for(t = 0; t < size_block; t++)
+      {
+        pvm_pkint(block_mat1[t], size_block, 1);
+      }
+      printf("sending block to %d\n", a[i][(j + 1) % nb_blocks]);
+      pvm_send(a[i][(j + 1) % nb_blocks], 0);
+
+      pvm_initsend(PvmDataDefault);
+      for(t = 0; t < size_block; t++)
+      {
+        pvm_pkint(block_mat2[t], size_block, 1);
+      }
+      printf("sending block to %d\n", a[(j + 1) % nb_blocks][j]);
+      pvm_send(a[(j + 1) % nb_blocks][j], 2);
+
+    }
+
+  printf("( 3 )\n");
+
+  // compute the matrix multiplication sequentially
+  for(i = 0; i < size_mat; i++)
+    for(j = 0; j < size_mat; j++)
+      for(z = 0; z < size_mat; z++)
+      {
+        result[i][j] += mat1[i][z] * mat2[z][j];
+      }
+
+  printf("\nComputed result: \n");
+  for(i = 0; i < size_mat; i++)
+  {
+    for(j = 0; j < size_mat; j++)
+    {
+      printf("%d ", result[i][j]);
+    }
+    printf("\n");
+  }
+
+
+  for(i = 0; i < size_mat; i++)
+  {
+    for(j = 0; j < size_mat; j++)
+    {
+      result[i][j] = 0;
+    }
+  }
+
+  printf("( 3 )\n");
+
+  //receive result from slaves and display it
+  int **result_block = new int*[size_block];
+  for(i = 0; i < size_block; i++)
+  {
+    result_block[i] = new  int[size_block];
+  }
+
+  printf("( 4 patru)\n");
+
+  for(i = 0; i < size_block; i++)
+    for(j = 0; j < size_block; j++)
+    {
+      pvm_recv(a[i][j], -1);
+      for(t = 0; t < size_block; t++)
+      {
+        pvm_upkint(result_block[t], size_block, 1);
+      }
+
+      for(q = 0; q < size_block; q++)
+      {
+        for(v = 0; v < size_block; v++)
+        {
+          result[(i * size_block) + q][(j * size_block) + v] = result_block[q][v];
+        }
+      }
+    }
+
+   printf("( 5 )\n");
+
+  printf("\n Final Received Result:\n");
+  for(i = 0; i < size_mat; i++)
+  {
+    for(j = 0; j < size_mat; j++)
+    {
+      printf("%d", result[i][j]);
+    }
+    printf("\n");
+  }
+
+  pvm_exit();
+  return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
