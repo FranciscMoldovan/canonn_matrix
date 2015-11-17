@@ -229,105 +229,99 @@ int main(int argc, char **argv)
         count_j = 0;
       }
 
+        printf("\n");
 
+        // send block
+        pvm_initsend(PvmDataDefault);
+        pvm_pkint(&nb_blocks, 1, 1);
+        pvm_pkint(&size_block, 1, 1);
 
+        for(t = 0; t < size_block; t++)
+        {
+          pvm_pkint(block_mat1[t], size_block, 1);
+        }
+        printf("sending block to %d\n", a[i][(j + 1) % nb_blocks]);
+        pvm_send(a[i][(j + 1) % nb_blocks], 0);
+
+        pvm_initsend(PvmDataDefault);
+        for(t = 0; t < size_block; t++)
+        {
+          pvm_pkint(block_mat2[t], size_block, 1);
+        }
+        printf("sending block to %d\n", a[(j + 1) % nb_blocks][j]);
+        pvm_send(a[(j + i) % nb_blocks][j], 2);
+
+      }
+
+    printf("( 3 )\n");
+
+    // compute the matrix multiplication sequentially
+    for(i = 0; i < size_mat; i++)
+      for(j = 0; j < size_mat; j++)
+        for(z = 0; z < size_mat; z++)
+        {
+          result[i][j] += mat1[i][z] * mat2[z][j];
+        }
+
+    printf("\nComputed result: \n");
+    for(i = 0; i < size_mat; i++)
+    {
+      for(j = 0; j < size_mat; j++)
+      {
+        printf("%d ", result[i][j]);
+      }
       printf("\n");
-
-
-
-
-
-      // send block
-      pvm_initsend(PvmDataDefault);
-      pvm_pkint(&nb_blocks, 1, 1);
-      pvm_pkint(&size_block, 1, 1);
-
-      for(t = 0; t < size_block; t++)
-      {
-        pvm_pkint(block_mat1[t], size_block, 1);
-      }
-      printf("sending block to %d\n", a[i][(j + 1) % nb_blocks]);
-      pvm_send(a[i][(j + 1) % nb_blocks], 0);
-
-      pvm_initsend(PvmDataDefault);
-      for(t = 0; t < size_block; t++)
-      {
-        pvm_pkint(block_mat2[t], size_block, 1);
-      }
-      printf("sending block to %d\n", a[(j + 1) % nb_blocks][j]);
-      pvm_send(a[(j + 1) % nb_blocks][j], 2);
-
     }
 
-  printf("( 3 )\n");
 
-  // compute the matrix multiplication sequentially
-  for(i = 0; i < size_mat; i++)
-    for(j = 0; j < size_mat; j++)
-      for(z = 0; z < size_mat; z++)
-      {
-        result[i][j] += mat1[i][z] * mat2[z][j];
-      }
-
-  printf("\nComputed result: \n");
-  for(i = 0; i < size_mat; i++)
-  {
-    for(j = 0; j < size_mat; j++)
+    for(i = 0; i < size_mat; i++)
     {
-      printf("%d ", result[i][j]);
+      for(j = 0; j < size_mat; j++)
+      {
+        result[i][j] = 0;
+      }
     }
-    printf("\n");
-  }
 
-
-  for(i = 0; i < size_mat; i++)
-  {
-    for(j = 0; j < size_mat; j++)
-    {
-      result[i][j] = 0;
-    }
-  }
-
-  printf("( 3 )\n");
+    printf("( 3 )\n");
 
   //receive result from slaves and display it
-  int **result_block = new int*[size_block];
-  for(i = 0; i < size_block; i++)
-  {
-    result_block[i] = new  int[size_block];
-  }
+  //  int **result_block = new int*[size_block];
+  //  for(i = 0; i < size_block; i++)
+  //  {
+  //    result_block[i] = new  int[size_block];
+  //  }
 
-  printf("( 4 patru)\n");
+  //  printf("( 4 patru)\n");
 
-  for(i = 0; i < size_block; i++)
-    for(j = 0; j < size_block; j++)
-    {
-      pvm_recv(a[i][j], -1);
-      for(t = 0; t < size_block; t++)
-      {
-        pvm_upkint(result_block[t], size_block, 1);
-      }
+  //  for(i = 0; i < size_block; i++)
+  //    for(j = 0; j < size_block; j++)
+  //    {
+  //      pvm_recv(a[i][j], -1);
+  //      for(t = 0; t < size_block; t++)
+  //      {
+  //        pvm_upkint(result_block[t], size_block, 1);
+  //      }
 
-      for(q = 0; q < size_block; q++)
-      {
-        for(v = 0; v < size_block; v++)
-        {
-          result[(i * size_block) + q][(j * size_block) + v] = result_block[q][v];
-        }
-      }
-    }
+  //      for(q = 0; q < size_block; q++)
+  //      {
+  //        for(v = 0; v < size_block; v++)
+  //        {
+  //          result[(i * size_block) + q][(j * size_block) + v] = result_block[q][v];
+  //        }
+  //      }
+  //    }
 
-   printf("( 5 )\n");
+  //   printf("( 5 )\n");
 
-  printf("\n Final Received Result:\n");
-  for(i = 0; i < size_mat; i++)
-  {
-    for(j = 0; j < size_mat; j++)
-    {
-      printf("%d", result[i][j]);
-    }
-    printf("\n");
-  }
+  //  printf("\n Final Received Result:\n");
+  //  for(i = 0; i < size_mat; i++)
+  //  {
+  //    for(j = 0; j < size_mat; j++)
+  //    {
+  //      printf("%d", result[i][j]);
+  //    }
+  //    printf("\n");
+  //  }
 
   pvm_exit();
   return 0;
