@@ -37,7 +37,7 @@ int main(int argc, char **argv)
   QApplication a(argc, argv);
   QTextEdit textEdit;
   //textEdit.setText("MY TID:"+number_string);
-  textEdit.setEnabled(false);
+  //textEdit.setEnabled(false);
   textEdit.show();
 
 
@@ -171,53 +171,53 @@ int main(int argc, char **argv)
   a.exec();
   ///
 
-  //  // do the remaining steps
-  //  for(q = 0; q < nb_blocks - 1; q++)
-  //  {
-  //    // sending the blocks to neighbours
-  //    pvm_initsend(PvmDataDefault);
-  //    for(t = 0; t < size_block; t++)
-  //    {
-  //      pvm_pkint(block_mat1[t], size_block, 1);
-  //    }
-  //    pvm_send(n_left, 1);
+    // do the remaining steps
+    for(q = 0; q < nb_blocks - 1; q++)
+    {
+      // sending the blocks to neighbours
+      pvm_initsend(PvmDataDefault);
+      for(t = 0; t < size_block; t++)
+      {
+        pvm_pkint(block_mat1[t], size_block, 1);
+      }
+      pvm_send(n_left, 1);
 
-  //    pvm_initsend(PvmDataDefault);
-  //    for(t = 0; t < size_block; t++)
-  //    {
-  //      pvm_pkint(block_mat2[t], size_block, 1);
-  //    }
-  //    pvm_send(n_up, 1);
+      pvm_initsend(PvmDataDefault);
+      for(t = 0; t < size_block; t++)
+      {
+        pvm_pkint(block_mat2[t], size_block, 1);
+      }
+      pvm_send(n_up, 1);
 
-  //    // receive blocks from right and lower neighbour
-  //    pvm_recv(n_right, -1);
-  //    for(t = 0; t < size_block; t++)
-  //    {
-  //      pvm_upkint(block_mat1[t], size_block, 1);
-  //    }
+      // receive blocks from right and lower neighbour
+      pvm_recv(n_right, -1);
+      for(t = 0; t < size_block; t++)
+      {
+        pvm_upkint(block_mat1[t], size_block, 1);
+      }
 
-  //    pvm_recv(n_down, -1);
-  //    for(t = 0; t < size_block; t++)
-  //    {
-  //      pvm_upkint(block_mat2[t], size_block, 1);
-  //    }
-  //    printf("~~~~xoxoxoxoxooxox~~~~~~~\n");
+      pvm_recv(n_down, -1);
+      for(t = 0; t < size_block; t++)
+      {
+        pvm_upkint(block_mat2[t], size_block, 1);
+      }
+      printf("~~~~xoxoxoxoxooxox~~~~~~~\n");
 
-  //    // perform computations on new blocks
-  //    for(i = 0; i < size_block; i++)
-  //      for(j = 0; j < size_block; j++)
-  //        for(k = 0; k < size_block; k++)
-  //        {
-  //          result[i][j] += block_mat1[i][k] * block_mat2[k][j];
-  //        }
-  //  }
-  //  // send result back to master
-  //  pvm_initsend(PvmDataDefault);
-  //  for(t = 0; t < size_block; t++)
-  //  {
-  //    pvm_pkint(result[t], size_block, 1);
-  //  }
-  //  pvm_send(parent_tid, 1);
+      // perform computations on new blocks
+      for(i = 0; i < size_block; i++)
+        for(j = 0; j < size_block; j++)
+          for(k = 0; k < size_block; k++)
+          {
+            result[i][j] += block_mat1[i][k] * block_mat2[k][j];
+          }
+    }
+    // send result back to master
+    pvm_initsend(PvmDataDefault);
+    for(t = 0; t < size_block; t++)
+    {
+      pvm_pkint(result[t], size_block, 1);
+    }
+    pvm_send(parent_tid, 1);
 
 
 

@@ -11,3 +11,4 @@ target_link_libraries(mat_master /home/francisc/programs/pvm3/lib/LINUX64/libpvm
 target_link_libraries(mat_master /home/francisc/programs/pvm3/lib/LINUX64/libgpvm3.a)
 target_link_libraries(mat_master ${QT_LIBRARIES})
 
+SET(EXECUTABLE_OUTPUT_PATH /home/francisc/programs/pvm3/bin/LINUX64/)

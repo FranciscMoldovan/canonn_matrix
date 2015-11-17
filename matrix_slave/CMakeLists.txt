@@ -12,4 +12,4 @@ target_link_libraries(mat_slave /home/francisc/programs/pvm3/lib/LINUX64/libpvm3
 target_link_libraries(mat_slave /home/francisc/programs/pvm3/lib/LINUX64/libgpvm3.a)
 target_link_libraries(mat_slave ${QT_LIBRARIES})
 
-
+SET(EXECUTABLE_OUTPUT_PATH /home/francisc/programs/pvm3/bin/LINUX64/)
