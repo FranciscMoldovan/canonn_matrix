@@ -1,11 +1,12 @@
 #include <pvm3.h>
 #include <stdio.h>
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <QString>
-#include <QLabel>
-#include <QWidget>
-#include <QMessageBox>
+//#include <qapplication.h>
+#include<QApplication>
+//#include <qpushbutton.h>
+//#include <QString>
+//#include <QLabel>
+//#include <QWidget>
+//#include <QMessageBox>
 #include <QTextEdit>
 #include <string>
 int main(int argc, char **argv)
@@ -97,8 +98,11 @@ int main(int argc, char **argv)
     result[i] = new int[size_block]();
   }
 
+  //  ///////////////////////////////
 
-
+  for(i = 0; i < size_block; i++)
+    for(j = 0; j < size_block; j++)
+        result[i][j]=0;
   // reading content of block from first matrix
   for(i = 0; i < size_block; i++)
   {
@@ -140,12 +144,6 @@ int main(int argc, char **argv)
     }
   }
 
-
-
-  //  ///////////////////////////////
-
-
-
   // compute the first result Block
   for(i = 0; i < size_block; i++)
     for(j = 0; j < size_block; j++)
@@ -154,7 +152,7 @@ int main(int argc, char **argv)
         result[i][j] += (block_mat1[i][k] * block_mat2[k][j]);
       }
 
-  sprintf(strr, "res:\n");
+  sprintf(strr, "result of multiplying block A and block B:\n");
   my_message.append(strr);
   for(i = 0; i < size_block; i++)
   {
@@ -172,7 +170,7 @@ int main(int argc, char **argv)
   ///
 
     // do the remaining steps
-    for(q = 0; q < nb_blocks - 1; q++)
+    for(q = 0; q < nb_blocks-1; q++)
     {
       // sending the blocks to neighbours
       pvm_initsend(PvmDataDefault);
