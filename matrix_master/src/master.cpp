@@ -240,16 +240,16 @@ int main(int argc, char **argv)
         {
           pvm_pkint(block_mat1[t], size_block, 1);
         }
-        printf("sending block to %d\n", a[i][(j + i) % nb_blocks]);
-        pvm_send(a[i][(j + i) % nb_blocks], 0);
+        printf("sending block A[%d][%d] to a[%d][%d](%d)\n",i,j,i,(j + i) % nb_blocks,a[i][(j + i) % nb_blocks]);
+        pvm_send(a[i][(j + i+i ) % nb_blocks], 0);
 
         pvm_initsend(PvmDataDefault);
         for(t = 0; t < size_block; t++)
         {
           pvm_pkint(block_mat2[t], size_block, 1);
         }
-        printf("sending block to %d\n", a[(j + i) % nb_blocks][j]);
-        pvm_send(a[(j + i) % nb_blocks][j], 2);
+        printf("sending block B[%d][%d] to a[%d][%d](%d)\n",i,j,(j + i) % nb_blocks,j,  a[(j + i) % nb_blocks][j]);
+        pvm_send(a[(j+j + i ) % nb_blocks][j], 2);
 
       }
 
@@ -326,7 +326,6 @@ int main(int argc, char **argv)
   pvm_exit();
   return 0;
 }
-
 
 
 
